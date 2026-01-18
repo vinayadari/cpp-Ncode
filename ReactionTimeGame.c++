@@ -6,89 +6,137 @@
 #include <cctype>
 #include <cstdlib>
 #include <ctime>
-#include <unordered_map>
+
 using namespace std;
 
-struct ReactionResult {
+struct ReactionResult
+{
     double reactionTimeMs;
-    char grade;          // S, A, B, C, D, F each grad has its own credit
-    char difficulty;     // B, N, H
-};  
+    char grade;        // S A B C D F
+    char difficulty;   // B N H
+};
+
+char calculateGrade(double ms)
+{
+    if (ms < 180)
+    {
+        return 'S';
+    }
+    else if (ms < 220)
+    {
+        return 'A';
+    }
+    else if (ms < 260)
+    {
+        return 'B';
+    }
+    else if (ms < 320)
+    {
+        return 'C';
+    }
+    else if (ms < 400)
+    {
+        return 'D';
+    }
+    else
+    {
+        return 'F';
+    }
+}
+
+int getDelay(char difficulty)
+{
+    if (difficulty == 'B')
+    {
+        return rand() % 3 + 2; // 2–4 seconds
+    }
+    else if (difficulty == 'N')
+    {
+        return rand() % 4 + 2; // 2–5 seconds
+    }
+    else if (difficulty == 'H')
+    {
+        return rand() % 5 + 3; // 3–7 seconds
+    }
+    else
+    {
+        return rand() % 4 + 2; // default (normal)
+    }
+}
 
 int main()
 {
-    vector<double> reactionTimeMs;
-    vector<char> grade;
-    vector<char> diff;
-    char diffi;
+    srand(time(0));
+
+    vector<ReactionResult> results;
     char choice = 'y';
-    int delay;
-    unordered_map<int, int> map_score ={{'B', 1}, {'N', 2}, {"H", 3}};
-    
+
     while (true)
     {
-        cout << "Press ENTER to continue..." << endl;
+        char difficulty;
+
+        cout << "\nPress ENTER when you are ready...";
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cin.get();
 
-        cout << "Enter difficulty (B beginer /N normal /H hardcore): " << endl;
-        cin >> diffi;
-        diffi = toupper(diffi);
+        cout << "Choose difficulty (B = Beginner, N = Normal, H = Hardcore): ";
+        cin >> difficulty;
+        difficulty = toupper(difficulty);
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-        if (diffi == 'B')
-        {
-            delay = rand() % 3 + 2;
-        }
-        else if (diffi == 'N')
-        {
-            delay = rand() % 4 + 2;
-        }
-        else if (diffi == 'H')
-        {
-            delay = rand() % 5 + 3;
-        }
-        else
-        {
-            delay = rand() % 4 + 2;
-        }
+        int delay = getDelay(difficulty);
 
+        cout << "Get ready...\n";
         this_thread::sleep_for(chrono::seconds(delay));
 
-        cout << "react by pressing enter !" << endl;
+        cout << "REACT! (Press ENTER)\n";
 
         auto start = chrono::high_resolution_clock::now();
         cin.get();
         auto end = chrono::high_resolution_clock::now();
 
-        double ms = chrono::duration<double, milli>(end - start).count();
+        double reactionTimeMs =
+            chrono::duration<double, milli>(end - start).count();
 
-        if (ms < 180)
+        char grade = calculateGrade(reactionTimeMs);
+
+        results.push_back(
+            {
+                reactionTimeMs,
+                grade,
+                difficulty
+            }
+        );
+
+        cout << "Reaction Time: " << reactionTimeMs << " ms\n";
+        cout << "Grade: " << grade << "\n";
+
+        if (grade == 'S')
         {
-            cout << "🔥 Insane reflexes! Are you human?\n";
+            cout << "🔥 Insane reflexes!\n";
         }
-        else if (ms < 220)
+        else if (grade == 'A')
         {
-            cout << "😎 Pro gamer level reaction!\n";
+            cout << "😎 Pro gamer level!\n";
         }
-        else if (ms < 260)
+        else if (grade == 'B')
         {
-            cout << "👍 Above average reaction.\n";
+            cout << "👍 Above average!\n";
         }
-        else if (ms < 320)
+        else if (grade == 'C')
         {
-            cout << "🙂 Normal human reaction.\n";
+            cout << "🙂 Normal reaction.\n";
         }
-        else if (ms < 400)
+        else if (grade == 'D')
         {
-            cout << "🐢 A bit slow, focus up!\n";
+            cout << "🐢 Slow reaction.\n";
         }
         else
         {
-            cout << "💀 Too slow! Were you sleeping?\n";
+            cout << "💀 Too slow!\n";
         }
 
-        cout << "Do you wish to continue? (y/n): " << endl;
+        cout << "\nDo you want to play another round? (y/n): ";
         cin >> choice;
 
         if (tolower(choice) == 'n')
@@ -96,9 +144,30 @@ int main()
             break;
         }
     }
-    //out of while printing stats 
 
-    cout<<"========== Stats ==========";
-    
+    cout << "\n========== FINAL STATS ==========\n";
+
+    double sum = 0.0;
+
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        cout << "Round " << i + 1
+             << " | Time: " << results[i].reactionTimeMs << " ms"
+             << " | Grade: " << results[i].grade
+             << " | Difficulty: " << results[i].difficulty << "\n";
+
+        sum += results[i].reactionTimeMs;
+    }
+
+    if (!results.empty())
+    {
+        cout << "Average Reaction Time: "
+             << sum / results.size()
+             << " ms\n";
+    }
+
+    cout << "================================\n";
+    cout << "Thanks for playing!\n";
+
     return 0;
 }
